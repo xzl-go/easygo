@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
-	"easygo/core"
-	"easygo/jwt"
-	"easygo/logger"
-	"easygo/rbac"
-	"easygo/tracing"
-	"easygo/validator"
 	"fmt"
 	"time"
+
+	"github.com/xzl-go/easygo/core"
+	"github.com/xzl-go/easygo/jwt"
+	"github.com/xzl-go/easygo/logger"
+	"github.com/xzl-go/easygo/rbac"
+	"github.com/xzl-go/easygo/tracing"
+	"github.com/xzl-go/easygo/validator"
 )
 
 type User struct {

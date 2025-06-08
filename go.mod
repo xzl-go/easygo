@@ -1,4 +1,4 @@
-module easygo
+module github.com/xzl-go/easygo
 
 go 1.24.3
 
