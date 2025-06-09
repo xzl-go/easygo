@@ -1,0 +1,11 @@
+[INFO] /Users/xzl/go/src/easygo/middleware/logger.go:25 [GET] /profile 160.625µs 401 Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36 Edg/115.0.1901.188
+[INFO] GET /profile 401 [::1]:50661
+[INFO] [EASYGO] 2025/06/09 - 13:22:15 | 401 |     161.584µs |     [::1]:50947 | GET     /profile
+[INFO] [EASYGO] 2025/06/09 - 13:24:27 | 401 |     218.708µs |       localhost | GET     /profile
+[INFO] [EASYGO] 2025/06/09 - 13:24:49 | 401 |      65.291µs |       localhost | GET     /profile
+[INFO] [EASYGO] 2025/06/09 - 13:24:54 | 401 |      38.291µs |       127.0.0.1 | GET     /profile
+[INFO] [EASYGO] 2025/06/09 - 13:25:54 | 401 |      92.375µs |       localhost | GET     /profile
+[INFO] [EASYGO] 2025/06/09 13:29:29 | 401 |     94.291µs |       localhost | GET /profile
+[EASYGO - INFO] 2025-06-09 13:43:41 [EASYGO] 2025/06/09 13:43:41 | 401 |    222.292µs |       localhost | GET /profile
+[EASYGO - INFO] 2025-06-09 13:44:35 [EASYGO] 2025/06/09 13:44:35 | 401 |      87.75µs |       localhost | GET /profile
+[EASYGO - INFO] 2025-06-09 13:48:00 [EASYGO] 2025/06/09 13:48:00 | 401 |    101.042µs |       localhost | GET /profile

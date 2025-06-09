@@ -1,16 +1,31 @@
+// Package core 提供了EasyGo框架的核心功能
 package core
 
 import (
 	"strings"
 )
 
-type MiddlewareFunc func(ctx *Context)
+// MiddlewareFunc 定义了中间件函数的类型
+// type MiddlewareFunc func(ctx *Context) // 删除了此行
 
-type router struct {
-	roots    map[string]*node
-	handlers map[string]HandlerFunc
+// node 表示路由树中的节点
+type node struct {
+	pattern  string           // 路由模式
+	part     string           // 路由部分
+	children map[string]*node // 子节点
+	isWild   bool             // 是否是通配符节点
+	handler  HandlerFunc      // 处理函数
 }
 
+// router 是路由管理器
+// 实现了基于前缀树的路由匹配
+type router struct {
+	roots    map[string]*node       // 路由树根节点
+	handlers map[string]HandlerFunc // 路由处理函数
+	engine   *Engine                // 引擎引用
+}
+
+// newRouter 创建新的路由器
 func newRouter() *router {
 	return &router{
 		roots:    make(map[string]*node),
@@ -18,118 +33,87 @@ func newRouter() *router {
 	}
 }
 
+// parsePattern 解析路由模式
 func parsePattern(pattern string) []string {
-	vs := strings.Split(pattern, "/")
-	parts := make([]string, 0)
-	for _, item := range vs {
-		if item != "" {
-			parts = append(parts, item)
-			if item[0] == '*' {
+	parts := strings.Split(pattern, "/")
+	result := make([]string, 0)
+	for _, part := range parts {
+		if part != "" {
+			result = append(result, part)
+			if part[0] == '*' {
 				break
 			}
 		}
 	}
-	return parts
+	return result
 }
 
-func (r *router) addRoute(method string, pattern string, handler HandlerFunc) {
+// insert 插入路由
+func (r *router) insert(method, pattern string, handler HandlerFunc) {
 	parts := parsePattern(pattern)
 	key := method + "-" + pattern
-
 	if _, ok := r.roots[method]; !ok {
-		r.roots[method] = &node{}
+		r.roots[method] = &node{children: make(map[string]*node)}
 	}
-
-	r.roots[method].insert(pattern, parts, 0)
+	root := r.roots[method]
+	for _, part := range parts {
+		if _, ok := root.children[part]; !ok {
+			root.children[part] = &node{
+				part:     part,
+				children: make(map[string]*node),
+				isWild:   part[0] == ':' || part[0] == '*',
+			}
+		}
+		root = root.children[part]
+	}
+	root.pattern = pattern
+	root.handler = handler
 	r.handlers[key] = handler
 }
 
-func (r *router) getRoute(method string, path string) (HandlerFunc, map[string]string) {
+// search 搜索路由
+func (r *router) search(method, path string) (*node, map[string]string) {
 	searchParts := parsePattern(path)
 	params := make(map[string]string)
-
 	root, ok := r.roots[method]
 	if !ok {
 		return nil, nil
 	}
 
-	n := root.search(searchParts, 0)
-	if n != nil {
-		parts := parsePattern(n.pattern)
-		for index, part := range parts {
-			if part[0] == ':' {
-				params[part[1:]] = searchParts[index]
-			}
-			if part[0] == '*' && len(part) > 1 {
-				params[part[1:]] = strings.Join(searchParts[index:], "/")
+	n := root
+	for i, part := range searchParts {
+		var found bool
+		for _, child := range n.children {
+			if child.part == part || child.isWild {
+				if child.part[0] == '*' {
+					params[child.part[1:]] = strings.Join(searchParts[i:], "/")
+					return child, params
+				}
+				if child.part[0] == ':' {
+					params[child.part[1:]] = part
+				}
+				n = child
+				found = true
 				break
 			}
 		}
-		return r.handlers[method+"-"+n.pattern], params
+		if !found {
+			return nil, nil
+		}
 	}
+	return n, params
+}
 
+// addRoute 添加路由
+func (r *router) addRoute(method, pattern string, handler HandlerFunc) {
+	r.insert(method, pattern, handler)
+}
+
+// getRoute 获取路由
+func (r *router) getRoute(method, path string) (HandlerFunc, map[string]string) {
+	n, params := r.search(method, path)
+	if n != nil {
+		return n.handler, params
+	}
 	return nil, nil
-}
-
-type node struct {
-	pattern  string
-	part     string
-	children []*node
-	isWild   bool
-}
-
-func (n *node) matchChild(part string) *node {
-	for _, child := range n.children {
-		if child.part == part || child.isWild {
-			return child
-		}
-	}
-	return nil
-}
-
-func (n *node) matchChildren(part string) []*node {
-	nodes := make([]*node, 0)
-	for _, child := range n.children {
-		if child.part == part || child.isWild {
-			nodes = append(nodes, child)
-		}
-	}
-	return nodes
-}
-
-func (n *node) insert(pattern string, parts []string, height int) {
-	if len(parts) == height {
-		n.pattern = pattern
-		return
-	}
-
-	part := parts[height]
-	child := n.matchChild(part)
-	if child == nil {
-		child = &node{part: part, isWild: part[0] == ':' || part[0] == '*'}
-		n.children = append(n.children, child)
-	}
-
-	child.insert(pattern, parts, height+1)
-}
-
-func (n *node) search(parts []string, height int) *node {
-	if len(parts) == height || strings.HasPrefix(n.part, "*") {
-		if n.pattern == "" {
-			return nil
-		}
-		return n
-	}
-
-	part := parts[height]
-	children := n.matchChildren(part)
-
-	for _, child := range children {
-		result := child.search(parts, height+1)
-		if result != nil {
-			return result
-		}
-	}
-
-	return nil
 }

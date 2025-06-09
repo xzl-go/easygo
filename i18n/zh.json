@@ -1,0 +1,11 @@
+{
+    "welcome": {
+        "message": "欢迎使用 EasyGo 框架",
+        "description": "欢迎消息"
+    },
+    "error": {
+        "not_found": "未找到请求的资源",
+        "unauthorized": "未授权访问",
+        "forbidden": "禁止访问"
+    }
+} 

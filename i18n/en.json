@@ -1,0 +1,11 @@
+{
+    "welcome": {
+        "message": "Welcome to EasyGo Framework",
+        "description": "Welcome message"
+    },
+    "error": {
+        "not_found": "Requested resource not found",
+        "unauthorized": "Unauthorized access",
+        "forbidden": "Access forbidden"
+    }
+} 
